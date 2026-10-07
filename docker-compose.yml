@@ -1,0 +1,105 @@
+# Production-like stack. `docker compose up` ALSO loads
+# docker-compose.override.yml (dev: hot reload). To run only this file:
+#   docker compose -f docker-compose.yml up --build
+name: hr-playground
+
+services:
+  mongo:
+    image: mongo:7
+    # A single-node REPLICA SET instead of a standalone server. MongoDB only
+    # supports multi-document transactions on replica sets (and sharded
+    # clusters), because transactions are built on the replication oplog.
+    # A one-member set is enough for that.
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      # Initiates the replica set on first boot (rs.status() throws until
+      # then), and only reports healthy once this node is the PRIMARY, i.e.
+      # ready to accept writes.
+      test:
+        - CMD
+        - mongosh
+        - --quiet
+        - --eval
+        - >-
+          try { rs.status() } catch (e) {
+          rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongo:27017' }] }) }
+          quit(db.hello().isWritablePrimary ? 0 : 1)
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+      start_interval: 1s
+
+  redis:
+    image: redis:7-alpine
+    # appendonly: persist to disk so queued jobs survive a restart.
+    # noeviction: BullMQ requires it. Under memory pressure Redis must return
+    # an error rather than silently evict keys (= silently lose jobs).
+    command: ['redis-server', '--appendonly', 'yes', '--maxmemory-policy', 'noeviction']
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+      start_interval: 1s
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+      target: runtime
+    env_file:
+      - path: .env
+        required: false
+    # `environment` wins over env_file: inside the Docker network the
+    # services are reached by service name, not localhost.
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://mongo:27017/hr?replicaSet=rs0
+      REDIS_URL: redis://redis:6379
+    ports:
+      - '3000:3000'
+    depends_on:
+      mongo:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # The runtime image has no curl; Node 22 has fetch built in.
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://localhost:3000/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+      start_interval: 1s
+    restart: unless-stopped
+
+  # Web UI to browse the database: http://localhost:8081 (admin / admin)
+  mongo-express:
+    image: mongo-express:1
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongo:27017/?replicaSet=rs0
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - '8081:8081'
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+volumes:
+  mongo-data:
+  redis-data:
