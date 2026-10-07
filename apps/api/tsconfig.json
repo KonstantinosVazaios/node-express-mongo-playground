@@ -1,0 +1,16 @@
+{
+  // Used by the editor and `npm run typecheck`: covers src AND tests/scripts.
+  // tsconfig.build.json narrows this down to src for the production build.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // NodeNext = "behave exactly like Node's own ESM loader". That is why
+    // relative imports must end in `.js` even though the file on disk is
+    // `.ts`: TypeScript does not rewrite import paths, and Node's ESM loader
+    // (unlike CommonJS require or Vite) never guesses file extensions.
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noEmit": true
+  },
+  "include": ["src", "tests", "scripts", "migrations", "*.ts"]
+}
