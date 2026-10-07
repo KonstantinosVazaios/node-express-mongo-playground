@@ -1,0 +1,14 @@
+{
+  "name": "node-express-mongo-playground",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Learning project: a production-style Node.js + Express + MongoDB + React HR app",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ]
+}
