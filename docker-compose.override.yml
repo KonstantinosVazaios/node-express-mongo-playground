@@ -1,0 +1,20 @@
+# Development overrides, merged automatically by `docker compose up`.
+# The source is bind-mounted into the container and tsx restarts the process
+# on every save, so there's no image rebuild while coding.
+services:
+  api:
+    build:
+      target: dev
+    # tini as PID 1: forwards SIGTERM through npx -> tsx -> node and reaps
+    # zombie processes, which a plain Node process at PID 1 doesn't do.
+    init: true
+    environment:
+      NODE_ENV: development
+      LOG_LEVEL: debug
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./tsconfig.base.json:/app/tsconfig.base.json:ro
+      # Anonymous volume: stops the bind mount above from hiding the
+      # container's own apps/api/node_modules with the host's (macOS
+      # binaries would not run on Linux anyway).
+      - /app/apps/api/node_modules
