@@ -1,4 +1,5 @@
 import express from 'express';
+import { healthRouter } from './routes/health.routes.js';
 
 /**
  * Builds the Express app WITHOUT calling listen().
@@ -19,6 +20,8 @@ export function createApp() {
   app.get('/', (_req, res) => {
     res.json({ name: 'hr-api', docs: '/docs' });
   });
+
+  app.use('/health', healthRouter);
 
   return app;
 }
