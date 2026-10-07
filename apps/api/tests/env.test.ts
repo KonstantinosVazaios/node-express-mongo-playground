@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { parseEnv } from '../src/config/env.js';
 
-const required = { MONGO_URL: 'mongodb://localhost:27017/hr' };
+const required = {
+  MONGO_URL: 'mongodb://localhost:27017/hr',
+  REDIS_URL: 'redis://localhost:6379',
+};
 
 describe('parseEnv', () => {
   it('applies defaults and coerces strings to numbers', () => {

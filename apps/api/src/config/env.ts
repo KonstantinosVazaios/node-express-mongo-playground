@@ -16,6 +16,7 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   // Must point at a replica set (see docker-compose.yml): transactions need one.
   MONGO_URL: z.string().regex(/^mongodb(\+srv)?:\/\//, 'must be a mongodb:// URL'),
+  REDIS_URL: z.string().regex(/^rediss?:\/\//, 'must be a redis:// URL'),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
