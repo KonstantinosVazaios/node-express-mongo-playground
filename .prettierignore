@@ -3,3 +3,4 @@ coverage
 package-lock.json
 # Generated files
 openapi.json
+packages/api-client/src/generated

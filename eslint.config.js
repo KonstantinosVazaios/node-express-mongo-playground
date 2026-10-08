@@ -7,7 +7,13 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['**/dist/**', '**/coverage/**', '**/node_modules/**']),
+  globalIgnores([
+    '**/dist/**',
+    '**/coverage/**',
+    '**/node_modules/**',
+    // Generated code: regenerated, never edited, so never linted.
+    'packages/api-client/src/generated/**',
+  ]),
   js.configs.recommended,
   // "TypeChecked" rules use the TS type information. The most valuable one
   // for Node is no-floating-promises: an un-awaited promise that rejects
