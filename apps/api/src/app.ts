@@ -9,6 +9,7 @@ import { authRouter } from './routes/auth.routes.js';
 import { feedbackRouter } from './routes/feedback.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 import { reviewCycleRouter } from './routes/review-cycle.routes.js';
+import { reviewRouter } from './routes/review.routes.js';
 import { userRouter } from './routes/user.routes.js';
 
 /**
@@ -66,6 +67,7 @@ export function createApp() {
   app.use('/users', userRouter);
   app.use('/feedback', feedbackRouter);
   app.use('/review-cycles', reviewCycleRouter);
+  app.use('/reviews', reviewRouter);
 
   app.use(notFoundHandler); // 7
   app.use(errorHandler); // 8
