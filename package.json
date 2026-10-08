@@ -19,7 +19,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "seed": "npm run seed --workspace @hr/api"
+    "seed": "npm run seed --workspace @hr/api",
+    "openapi:write": "npm run openapi:write --workspace @hr/api"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
