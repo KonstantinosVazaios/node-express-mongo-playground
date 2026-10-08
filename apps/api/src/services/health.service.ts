@@ -1,13 +1,7 @@
 import { pingMongo } from '../db/mongo.js';
 import { pingRedis } from '../db/redis.js';
 
-export type DependencyStatus = 'up' | 'down';
-
-export interface HealthReport {
-  status: 'ok' | 'degraded';
-  uptimeSeconds: number;
-  checks: { mongo: DependencyStatus; redis: DependencyStatus };
-}
+import type { HealthReport } from '../schemas/health.schema.js';
 
 const CHECK_TIMEOUT_MS = 1_000;
 

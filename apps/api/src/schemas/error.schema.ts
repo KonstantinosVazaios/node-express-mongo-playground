@@ -22,22 +22,26 @@ export const ErrorCodeSchema = z.enum([
   'INTERNAL_ERROR',
 ]);
 
-export const FieldErrorSchema = z.object({
-  in: z.enum(['body', 'query', 'params']),
-  path: z.string(),
-  message: z.string(),
-});
-
-export const ErrorResponseSchema = z.object({
-  error: z.object({
-    code: ErrorCodeSchema,
+export const FieldErrorSchema = z
+  .object({
+    in: z.enum(['body', 'query', 'params']),
+    path: z.string(),
     message: z.string(),
-    requestId: z.string().optional(),
-    fields: z.array(FieldErrorSchema).optional(),
-    // Only ever present when NODE_ENV=development.
-    stack: z.string().optional(),
-  }),
-});
+  })
+  .meta({ id: 'FieldError' });
+
+export const ErrorResponseSchema = z
+  .object({
+    error: z.object({
+      code: ErrorCodeSchema,
+      message: z.string(),
+      requestId: z.string().optional(),
+      fields: z.array(FieldErrorSchema).optional(),
+      // Only ever present when NODE_ENV=development.
+      stack: z.string().optional(),
+    }),
+  })
+  .meta({ id: 'ErrorResponse' });
 
 export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
 export type FieldError = z.infer<typeof FieldErrorSchema>;

@@ -6,16 +6,18 @@ import { ObjectIdSchema, PaginationQuerySchema, paginated } from './common.schem
 export const RoleSchema = z.enum(ROLES);
 
 /** What the API returns for a user. The password hash is simply not part of it. */
-export const UserSchema = z.object({
-  id: z.string(),
-  organizationId: z.string(),
-  email: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  fullName: z.string(),
-  role: RoleSchema,
-  managerId: z.string().nullable(),
-});
+export const UserSchema = z
+  .object({
+    id: z.string(),
+    organizationId: z.string(),
+    email: z.string(),
+    firstName: z.string(),
+    lastName: z.string(),
+    fullName: z.string(),
+    role: RoleSchema,
+    managerId: z.string().nullable(),
+  })
+  .meta({ id: 'User' });
 
 export type UserDto = z.infer<typeof UserSchema>;
 
