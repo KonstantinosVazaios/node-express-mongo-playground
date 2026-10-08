@@ -8,5 +8,6 @@
  * db/mongo.ts imports this file, so every process that connects (API, worker,
  * scripts) has all models registered.
  */
+export * from './feedback.model.js';
 export * from './organization.model.js';
 export * from './user.model.js';
