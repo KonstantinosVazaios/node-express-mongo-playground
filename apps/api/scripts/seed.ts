@@ -3,7 +3,10 @@ import type { Types } from 'mongoose';
 import { env } from '../src/config/env.js';
 import { connectMongo, disconnectMongo } from '../src/db/mongo.js';
 import { logger } from '../src/lib/logger.js';
+import { FeedbackModel } from '../src/models/feedback.model.js';
 import { OrganizationModel } from '../src/models/organization.model.js';
+import { ReviewCycleModel } from '../src/models/review-cycle.model.js';
+import { ReviewModel } from '../src/models/review.model.js';
 import { type Role, UserModel } from '../src/models/user.model.js';
 
 /** Every seeded user has this password (see README). */
@@ -53,9 +56,13 @@ const ORGANIZATIONS: { name: string; slug: string; users: SeedUser[] }[] = [
 export async function seed(): Promise<void> {
   // Wiping every tenant is exactly what the tenant guard exists to prevent,
   // so the seed opts out explicitly.
+  const everyTenant = { skipTenantGuard: true };
   await Promise.all([
     OrganizationModel.deleteMany({}),
-    UserModel.deleteMany({}).setOptions({ skipTenantGuard: true }),
+    UserModel.deleteMany({}).setOptions(everyTenant),
+    FeedbackModel.deleteMany({}).setOptions(everyTenant),
+    ReviewCycleModel.deleteMany({}).setOptions(everyTenant),
+    ReviewModel.deleteMany({}).setOptions(everyTenant),
   ]);
 
   for (const org of ORGANIZATIONS) {
