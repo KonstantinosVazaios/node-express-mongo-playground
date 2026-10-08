@@ -37,7 +37,11 @@ export async function login(
   email: string,
   password: string,
 ): Promise<{ user: UserDto; token: string }> {
-  const user = await UserModel.findOne({ email }).select('+password');
+  // The one legitimately cross-tenant query: before login we don't know the
+  // user's organization yet (emails are globally unique).
+  const user = await UserModel.findOne({ email })
+    .select('+password')
+    .setOptions({ skipTenantGuard: true });
 
   // bcrypt.compare is async: the hashing runs on libuv's thread pool, so the
   // event loop keeps serving other requests during those ~250ms.
@@ -103,8 +107,8 @@ export async function getSessionUser(token: string): Promise<AuthUser> {
  * (User::with('organization')). It is not a SQL JOIN; the server-side
  * equivalent of a join is $lookup in an aggregation pipeline (later).
  */
-export async function getMe(userId: string): Promise<MeResponse> {
-  const user = await UserModel.findById(userId)
+export async function getMe(actor: AuthUser): Promise<MeResponse> {
+  const user = await UserModel.findOne({ _id: actor.id, organizationId: actor.organizationId })
     .populate<{ organizationId: Organization & { _id: Types.ObjectId } }>(
       'organizationId',
       'name slug',

@@ -51,7 +51,12 @@ const ORGANIZATIONS: { name: string; slug: string; users: SeedUser[] }[] = [
 
 /** Wipes the seeded collections and recreates the demo data. */
 export async function seed(): Promise<void> {
-  await Promise.all([OrganizationModel.deleteMany({}), UserModel.deleteMany({})]);
+  // Wiping every tenant is exactly what the tenant guard exists to prevent,
+  // so the seed opts out explicitly.
+  await Promise.all([
+    OrganizationModel.deleteMany({}),
+    UserModel.deleteMany({}).setOptions({ skipTenantGuard: true }),
+  ]);
 
   for (const org of ORGANIZATIONS) {
     const organization = await OrganizationModel.create({ name: org.name, slug: org.slug });

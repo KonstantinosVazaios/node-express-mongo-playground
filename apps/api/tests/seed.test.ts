@@ -13,8 +13,14 @@ describe('seed script', () => {
     await seed();
 
     expect(await OrganizationModel.countDocuments()).toBe(2);
-    const eve = await UserModel.findOne({ email: 'eve@acme.test' }).populate('managerId').orFail();
-    expect(eve.managerId).toMatchObject({ email: 'maria@acme.test' });
+    const eve = await UserModel.findOne({ email: 'eve@acme.test' })
+      .setOptions({ skipTenantGuard: true })
+      .orFail();
+    const manager = await UserModel.findOne({
+      _id: eve.managerId,
+      organizationId: eve.organizationId,
+    }).orFail();
+    expect(manager.email).toBe('maria@acme.test');
 
     const res = await request(createApp())
       .post('/auth/login')
@@ -26,6 +32,6 @@ describe('seed script', () => {
     await seed();
     await seed();
 
-    expect(await UserModel.countDocuments()).toBe(9);
+    expect(await UserModel.countDocuments().setOptions({ skipTenantGuard: true })).toBe(9);
   });
 });

@@ -110,7 +110,7 @@ describe('GET /auth/me (authenticate middleware)', () => {
   it('rejects the session of a user that no longer exists', async () => {
     const agent = request.agent(app);
     await agent.post('/auth/login').send({ email, password: TEST_PASSWORD }).expect(200);
-    await UserModel.deleteOne({ email });
+    await UserModel.deleteOne({ email }).setOptions({ skipTenantGuard: true });
 
     const res = await agent.get('/auth/me');
 

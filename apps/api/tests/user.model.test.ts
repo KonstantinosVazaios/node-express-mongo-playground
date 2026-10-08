@@ -24,33 +24,41 @@ describe('UserModel', () => {
   it('hashes the password in a pre-save hook', async () => {
     const user = await createUser();
 
-    const stored = await UserModel.findById(user._id).select('+password').orFail();
+    const stored = await UserModel.findOne({ _id: user._id, organizationId })
+      .select('+password')
+      .orFail();
     expect(stored.password).not.toBe('correct horse battery staple');
     expect(await bcrypt.compare('correct horse battery staple', stored.password)).toBe(true);
   });
 
   it('does not re-hash when other fields change', async () => {
     const user = await createUser();
-    const before = (await UserModel.findById(user._id).select('+password').orFail()).password;
+    const before = (
+      await UserModel.findOne({ _id: user._id, organizationId }).select('+password').orFail()
+    ).password;
 
     user.firstName = 'Augusta';
     await user.save();
 
-    const after = (await UserModel.findById(user._id).select('+password').orFail()).password;
+    const after = (
+      await UserModel.findOne({ _id: user._id, organizationId }).select('+password').orFail()
+    ).password;
     expect(after).toBe(before);
   });
 
   it('never selects the password by default', async () => {
     const user = await createUser();
 
-    const found = await UserModel.findById(user._id).orFail();
+    const found = await UserModel.findOne({ _id: user._id, organizationId }).orFail();
     expect(found.password).toBeUndefined();
   });
 
   it('strips the password from JSON even when it was selected', async () => {
     const user = await createUser();
 
-    const found = await UserModel.findById(user._id).select('+password').orFail();
+    const found = await UserModel.findOne({ _id: user._id, organizationId })
+      .select('+password')
+      .orFail();
     const json = JSON.parse(JSON.stringify(found));
 
     expect(json).not.toHaveProperty('password');

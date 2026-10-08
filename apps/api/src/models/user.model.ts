@@ -1,6 +1,7 @@
 import bcrypt from 'bcrypt';
 import { type HydratedDocument, type InferSchemaType, Schema, model } from 'mongoose';
 import { env } from '../config/env.js';
+import { tenantGuard } from './plugins/tenant-guard.js';
 
 export const ROLES = ['admin', 'manager', 'employee'] as const;
 export type Role = (typeof ROLES)[number];
@@ -54,6 +55,8 @@ userSchema.set('toJSON', {
     return safe;
   },
 });
+
+userSchema.plugin(tenantGuard);
 
 // "Who reports to this manager?" is the hottest query for managers.
 userSchema.index({ organizationId: 1, managerId: 1 });

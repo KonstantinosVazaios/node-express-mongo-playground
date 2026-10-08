@@ -21,5 +21,5 @@ export function logout(_req: Request, res: Response) {
 }
 
 export async function me(req: Request, res: Response<MeResponse>) {
-  res.json(await authService.getMe(currentUser(req).id));
+  res.json(await authService.getMe(currentUser(req)));
 }
