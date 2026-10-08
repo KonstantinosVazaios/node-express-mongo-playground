@@ -20,7 +20,9 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "seed": "npm run seed --workspace @hr/api",
-    "openapi:write": "npm run openapi:write --workspace @hr/api"
+    "openapi:write": "npm run openapi:write --workspace @hr/api",
+    "generate:client": "npm run openapi:write && npm run generate --workspace @hr/api-client",
+    "check:client": "npm run generate:client && git diff --exit-code -- openapi.json packages/api-client/src/generated && test -z \"$(git status --porcelain -- openapi.json packages/api-client/src/generated)\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
