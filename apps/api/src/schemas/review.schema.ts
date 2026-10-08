@@ -57,6 +57,33 @@ export const ListReviewsQuerySchema = z.strictObject({
 });
 export type ListReviewsQuery = z.infer<typeof ListReviewsQuerySchema>;
 
+export const UpdateReviewBodySchema = z
+  .object({
+    /** Replaces all scores. Competencies must belong to the cycle (checked in the service). */
+    scores: z
+      .array(
+        z.object({
+          competency: z.string().trim().min(1),
+          score: z.number().int().min(1, 'Scores go from 1 to 5').max(5, 'Scores go from 1 to 5'),
+        }),
+      )
+      .max(20)
+      .refine(
+        (scores) => new Set(scores.map((s) => s.competency)).size === scores.length,
+        'Each competency can only be scored once',
+      )
+      .optional(),
+    /** Updates answers by their id (questions themselves are fixed by the cycle). */
+    answers: z
+      .array(z.object({ id: ObjectIdSchema, answer: z.string().trim().max(5000) }))
+      .max(20)
+      .optional(),
+  })
+  .refine((body) => body.scores !== undefined || body.answers !== undefined, {
+    message: 'Provide scores and/or answers',
+  });
+export type UpdateReviewBody = z.infer<typeof UpdateReviewBodySchema>;
+
 export interface PopulatedCycle {
   _id: Types.ObjectId;
   name: string;

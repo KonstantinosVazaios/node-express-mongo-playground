@@ -116,3 +116,90 @@ describe('GET /reviews/:id', () => {
     expect(res.status).toBe(403);
   });
 });
+
+describe('PATCH /reviews/:id', () => {
+  const scores = [
+    { competency: 'Communication', score: 3 },
+    { competency: 'Ownership', score: 4 },
+  ];
+
+  it('lets the reviewer update scores and answers', async () => {
+    const agent = await loginAs(app, maria);
+    const eveAnswerId = eveReview.answers[0]!._id.toString();
+
+    const res = await agent
+      .patch(`/reviews/${eveReview.id}`)
+      .send({ scores, answers: [{ id: eveAnswerId, answer: 'Led the migration' }] });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({
+      scores,
+      averageScore: 3.5,
+      answers: [{ id: eveAnswerId, answer: 'Led the migration' }],
+    });
+  });
+
+  it('returns 403 for employees (route role check)', async () => {
+    const res = await (await loginAs(app, eve)).patch(`/reviews/${eveReview.id}`).send({ scores });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('lets an admin edit any review in the organization', async () => {
+    const res = await (
+      await loginAs(app, admin)
+    )
+      .patch(`/reviews/${emmaReview.id}`)
+      .send({ scores });
+
+    expect(res.status).toBe(200);
+  });
+
+  it('rejects competencies that are not part of the cycle, as a field error', async () => {
+    const res = await (
+      await loginAs(app, maria)
+    )
+      .patch(`/reviews/${eveReview.id}`)
+      .send({ scores: [{ competency: 'Juggling', score: 5 }] });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.fields).toEqual([
+      expect.objectContaining({ path: 'scores.0.competency' }),
+    ]);
+  });
+
+  it('returns 409 when the review is locked', async () => {
+    eveReview.locked = true;
+    await eveReview.save();
+
+    const res = await (
+      await loginAs(app, maria)
+    )
+      .patch(`/reviews/${eveReview.id}`)
+      .send({ scores });
+
+    expect(res.status).toBe(409);
+  });
+});
+
+describe('POST /reviews/:id/submit', () => {
+  it('requires every competency to be scored', async () => {
+    const res = await (await loginAs(app, admin)).post(`/reviews/${emmaReview.id}/submit`);
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.fields[0].message).toBe('Missing scores for: Communication, Ownership');
+  });
+
+  it('submits once; afterwards the review is read-only', async () => {
+    const agent = await loginAs(app, maria);
+
+    const submitted = await agent.post(`/reviews/${eveReview.id}/submit`);
+    const again = await agent.post(`/reviews/${eveReview.id}/submit`);
+    const edit = await agent.patch(`/reviews/${eveReview.id}`).send({ scores: [] });
+
+    expect(submitted.status).toBe(200);
+    expect(submitted.body).toMatchObject({ status: 'submitted', submittedAt: expect.any(String) });
+    expect(again.status).toBe(409);
+    expect(edit.status).toBe(409);
+  });
+});
