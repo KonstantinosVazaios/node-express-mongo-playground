@@ -13,6 +13,9 @@ export default defineConfig(
     '**/node_modules/**',
     // Generated code: regenerated, never edited, so never linted.
     'packages/api-client/src/generated/**',
+    // Output of `npm run generate:client:compare` (git-ignored; ESLint
+    // doesn't read .gitignore, Prettier does).
+    'compare/**',
   ]),
   js.configs.recommended,
   // "TypeChecked" rules use the TS type information. The most valuable one
