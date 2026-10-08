@@ -25,16 +25,27 @@ export type FeedbackDto = z.infer<typeof FeedbackSchema>;
 export const FeedbackListSchema = paginated(FeedbackSchema);
 export type FeedbackList = z.infer<typeof FeedbackListSchema>;
 
+const FeedbackTextSchema = z
+  .string()
+  .trim()
+  .min(3, 'Feedback must be at least 3 characters')
+  .max(5000, 'Feedback must be at most 5000 characters');
+
 export const CreateFeedbackBodySchema = z.object({
   employeeId: ObjectIdSchema,
-  text: z
-    .string()
-    .trim()
-    .min(3, 'Feedback must be at least 3 characters')
-    .max(5000, 'Feedback must be at most 5000 characters'),
+  text: FeedbackTextSchema,
   source: FeedbackSourceSchema.default('manual'),
 });
 export type CreateFeedbackBody = z.infer<typeof CreateFeedbackBodySchema>;
+
+// PATCH semantics: every field optional, but at least one must be present.
+// (The employee can't be changed; that would be different feedback.)
+export const UpdateFeedbackBodySchema = z
+  .object({ text: FeedbackTextSchema.optional(), source: FeedbackSourceSchema.optional() })
+  .refine((body) => body.text !== undefined || body.source !== undefined, {
+    message: 'Provide at least one field to update',
+  });
+export type UpdateFeedbackBody = z.infer<typeof UpdateFeedbackBodySchema>;
 
 export const ListFeedbackQuerySchema = z.strictObject({
   ...PaginationQuerySchema.shape,

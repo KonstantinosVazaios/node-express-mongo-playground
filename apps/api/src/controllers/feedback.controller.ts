@@ -6,6 +6,7 @@ import type {
   FeedbackDto,
   FeedbackList,
   ListFeedbackQuery,
+  UpdateFeedbackBody,
 } from '../schemas/feedback.schema.js';
 import * as feedbackService from '../services/feedback.service.js';
 
@@ -26,4 +27,16 @@ export async function createFeedback(
 ) {
   const feedback = await feedbackService.createFeedback(currentUser(req), req.body);
   res.status(201).location(`/feedback/${feedback.id}`).json(feedback);
+}
+
+export async function updateFeedback(
+  req: Request<IdParams, FeedbackDto, UpdateFeedbackBody>,
+  res: Response<FeedbackDto>,
+) {
+  res.json(await feedbackService.updateFeedback(currentUser(req), req.params.id, req.body));
+}
+
+export async function deleteFeedback(req: Request<IdParams>, res: Response) {
+  await feedbackService.deleteFeedback(currentUser(req), req.params.id);
+  res.status(204).end();
 }

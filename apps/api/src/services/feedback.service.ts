@@ -8,6 +8,7 @@ import {
   type CreateFeedbackBody,
   type FeedbackDto,
   type ListFeedbackQuery,
+  type UpdateFeedbackBody,
   type PopulatedUser,
   toFeedbackDto,
 } from '../schemas/feedback.schema.js';
@@ -119,4 +120,41 @@ export async function createFeedback(
     source: body.source,
   });
   return getFeedback(actor, created._id.toString());
+}
+
+/** Loads a feedback document of the actor's tenant, or 404. */
+async function findInTenant(actor: AuthUser, id: string) {
+  const feedback = await FeedbackModel.findOne({ _id: id, organizationId: actor.organizationId });
+  if (!feedback) throw new NotFoundError('Feedback');
+  return feedback;
+}
+
+/** Only the author may edit their feedback. */
+export async function updateFeedback(
+  actor: AuthUser,
+  id: string,
+  body: UpdateFeedbackBody,
+): Promise<FeedbackDto> {
+  // A hydrated document this time (no .lean()): we modify it and call save(),
+  // which runs schema validation and bumps updatedAt. Lean objects have no
+  // save().
+  const feedback = await findInTenant(actor, id);
+  if (!feedback.authorId.equals(actor.id)) {
+    throw new ForbiddenError('Only the author can edit this feedback');
+  }
+
+  if (body.text !== undefined) feedback.text = body.text;
+  if (body.source !== undefined) feedback.source = body.source;
+  await feedback.save();
+
+  return getFeedback(actor, id);
+}
+
+/** The author or an admin may delete feedback. */
+export async function deleteFeedback(actor: AuthUser, id: string): Promise<void> {
+  const feedback = await findInTenant(actor, id);
+  if (actor.role !== 'admin' && !feedback.authorId.equals(actor.id)) {
+    throw new ForbiddenError('Only the author or an admin can delete this feedback');
+  }
+  await FeedbackModel.deleteOne({ _id: feedback._id, organizationId: actor.organizationId });
 }

@@ -168,3 +168,66 @@ describe('GET /feedback/:id', () => {
     expect(await FeedbackModel.countDocuments({ organizationId: eve.organizationId })).toBe(1);
   });
 });
+
+describe('PATCH /feedback/:id', () => {
+  it('lets the author edit their feedback', async () => {
+    const feedback = await createFeedback(eve, emma, 'First draft');
+
+    const res = await (
+      await loginAs(app, eve)
+    )
+      .patch(`/feedback/${feedback.id}`)
+      .send({ text: 'Edited text', source: 'slack' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ text: 'Edited text', source: 'slack' });
+  });
+
+  it('forbids anyone else, even an admin', async () => {
+    const feedback = await createFeedback(eve, emma);
+
+    const res = await (
+      await loginAs(app, admin)
+    )
+      .patch(`/feedback/${feedback.id}`)
+      .send({ text: 'Not mine' });
+
+    expect(res.status).toBe(403);
+  });
+
+  it('rejects an empty update', async () => {
+    const feedback = await createFeedback(eve, emma);
+
+    const res = await (await loginAs(app, eve)).patch(`/feedback/${feedback.id}`).send({});
+
+    expect(res.status).toBe(400);
+    expect(res.body.error.fields[0].message).toBe('Provide at least one field to update');
+  });
+});
+
+describe('DELETE /feedback/:id', () => {
+  it('lets an admin delete feedback', async () => {
+    const feedback = await createFeedback(eve, emma);
+
+    const res = await (await loginAs(app, admin)).delete(`/feedback/${feedback.id}`);
+
+    expect(res.status).toBe(204);
+    expect(await FeedbackModel.countDocuments({ organizationId: eve.organizationId })).toBe(0);
+  });
+
+  it('forbids a colleague who is not the author', async () => {
+    const feedback = await createFeedback(eve, emma);
+
+    const res = await (await loginAs(app, emma)).delete(`/feedback/${feedback.id}`);
+
+    expect(res.status).toBe(403);
+  });
+
+  it('returns 404 for another organization', async () => {
+    const globex = await createFeedback(gary, gary);
+
+    const res = await (await loginAs(app, admin)).delete(`/feedback/${globex.id}`);
+
+    expect(res.status).toBe(404);
+  });
+});
