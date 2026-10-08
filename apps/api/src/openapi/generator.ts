@@ -1,6 +1,8 @@
 import { OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { registerAuthPaths } from './paths/auth.paths.js';
+import { registerFeedbackPaths } from './paths/feedback.paths.js';
 import { registerSystemPaths } from './paths/system.paths.js';
+import { registerUserPaths } from './paths/users.paths.js';
 import { createRegistry } from './registry.js';
 
 /**
@@ -20,6 +22,8 @@ export function generateOpenApiDocument() {
 
   registerSystemPaths(registry);
   registerAuthPaths(registry);
+  registerUserPaths(registry);
+  registerFeedbackPaths(registry);
 
   return new OpenApiGeneratorV31(registry.definitions).generateDocument({
     openapi: '3.1.0',
@@ -32,6 +36,8 @@ export function generateOpenApiDocument() {
     },
     tags: [
       { name: 'Auth', description: 'Session cookie login/logout' },
+      { name: 'Users', description: 'The organization directory' },
+      { name: 'Feedback', description: 'Feedback about colleagues' },
       { name: 'System', description: 'Health and operations' },
     ],
   });

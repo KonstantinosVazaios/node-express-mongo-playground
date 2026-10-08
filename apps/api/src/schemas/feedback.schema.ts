@@ -11,18 +11,20 @@ import {
 
 export const FeedbackSourceSchema = z.enum(FEEDBACK_SOURCES);
 
-export const FeedbackSchema = z.object({
-  id: z.string(),
-  employee: UserRefSchema,
-  author: UserRefSchema,
-  text: z.string(),
-  source: FeedbackSourceSchema,
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+export const FeedbackSchema = z
+  .object({
+    id: z.string(),
+    employee: UserRefSchema,
+    author: UserRefSchema,
+    text: z.string(),
+    source: FeedbackSourceSchema,
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .meta({ id: 'Feedback' });
 export type FeedbackDto = z.infer<typeof FeedbackSchema>;
 
-export const FeedbackListSchema = paginated(FeedbackSchema);
+export const FeedbackListSchema = paginated(FeedbackSchema).meta({ id: 'FeedbackPage' });
 export type FeedbackList = z.infer<typeof FeedbackListSchema>;
 
 const FeedbackTextSchema = z
@@ -31,11 +33,13 @@ const FeedbackTextSchema = z
   .min(3, 'Feedback must be at least 3 characters')
   .max(5000, 'Feedback must be at most 5000 characters');
 
-export const CreateFeedbackBodySchema = z.object({
-  employeeId: ObjectIdSchema,
-  text: FeedbackTextSchema,
-  source: FeedbackSourceSchema.default('manual'),
-});
+export const CreateFeedbackBodySchema = z
+  .object({
+    employeeId: ObjectIdSchema,
+    text: FeedbackTextSchema,
+    source: FeedbackSourceSchema.default('manual'),
+  })
+  .meta({ id: 'CreateFeedbackRequest' });
 export type CreateFeedbackBody = z.infer<typeof CreateFeedbackBodySchema>;
 
 // PATCH semantics: every field optional, but at least one must be present.
@@ -44,7 +48,8 @@ export const UpdateFeedbackBodySchema = z
   .object({ text: FeedbackTextSchema.optional(), source: FeedbackSourceSchema.optional() })
   .refine((body) => body.text !== undefined || body.source !== undefined, {
     message: 'Provide at least one field to update',
-  });
+  })
+  .meta({ id: 'UpdateFeedbackRequest' });
 export type UpdateFeedbackBody = z.infer<typeof UpdateFeedbackBodySchema>;
 
 export const ListFeedbackQuerySchema = z.strictObject({

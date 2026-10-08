@@ -21,7 +21,7 @@ export const UserSchema = z
 
 export type UserDto = z.infer<typeof UserSchema>;
 
-export const UserListSchema = paginated(UserSchema);
+export const UserListSchema = paginated(UserSchema).meta({ id: 'UserPage' });
 export type UserList = z.infer<typeof UserListSchema>;
 
 // strictObject: unknown query params are a 400, not silently ignored. It also
