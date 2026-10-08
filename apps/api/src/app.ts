@@ -1,5 +1,6 @@
 import cookieParser from 'cookie-parser';
 import express from 'express';
+import { env } from './config/env.js';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { httpLogger } from './middleware/http-logger.js';
 import { requestId } from './middleware/request-id.js';
@@ -17,6 +18,11 @@ import { healthRouter } from './routes/health.routes.js';
  */
 export function createApp() {
   const app = express();
+
+  // Behind nginx (the web container) the TCP peer is the proxy, not the
+  // user. This tells Express how many proxy hops to trust when it reads
+  // req.ip from X-Forwarded-For. The rate limiter keys on req.ip.
+  app.set('trust proxy', env.TRUST_PROXY);
 
   app.use(requestId);
   app.use(httpLogger);

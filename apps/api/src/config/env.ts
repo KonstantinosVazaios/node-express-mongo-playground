@@ -33,6 +33,11 @@ const EnvSchema = z.object({
   // bcrypt cost factor: each +1 doubles the hashing time. 12 is ~250ms, which
   // is slow on purpose to make brute force expensive. Tests use 4 for speed.
   BCRYPT_ROUNDS: z.coerce.number().int().min(4).max(15).default(12),
+  // How many reverse proxies (nginx, a load balancer) sit in front of the API.
+  // Express then reads the client IP from X-Forwarded-For. Leave it at 0 when
+  // the API is reached directly, or any client could spoof its IP with that
+  // header and dodge the rate limiter.
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
