@@ -2,6 +2,7 @@ import express from 'express';
 import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { httpLogger } from './middleware/http-logger.js';
 import { requestId } from './middleware/request-id.js';
+import { corsMiddleware, securityHeaders } from './middleware/security.js';
 import { healthRouter } from './routes/health.routes.js';
 
 /**
@@ -17,6 +18,8 @@ export function createApp() {
 
   app.use(requestId);
   app.use(httpLogger);
+  app.use(securityHeaders);
+  app.use(corsMiddleware);
 
   // Express doesn't parse bodies by default (unlike Laravel/FastAPI). Without
   // this middleware req.body is undefined. The size limit protects against

@@ -17,6 +17,12 @@ const EnvSchema = z.object({
   // Must point at a replica set (see docker-compose.yml): transactions need one.
   MONGO_URL: z.string().regex(/^mongodb(\+srv)?:\/\//, 'must be a mongodb:// URL'),
   REDIS_URL: z.string().regex(/^rediss?:\/\//, 'must be a redis:// URL'),
+  // Comma-separated list of origins allowed to call the API with cookies,
+  // e.g. "http://localhost:5173,http://localhost:8080".
+  CORS_ORIGIN: z
+    .string()
+    .default('http://localhost:5173')
+    .transform((value) => value.split(',').map((origin) => origin.trim())),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 
