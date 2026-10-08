@@ -11,4 +11,5 @@
 export * from './feedback.model.js';
 export * from './organization.model.js';
 export * from './review-cycle.model.js';
+export * from './review.model.js';
 export * from './user.model.js';

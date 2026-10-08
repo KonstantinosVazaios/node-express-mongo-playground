@@ -17,6 +17,6 @@ describe('model registry', () => {
       encoding: 'utf8',
     });
 
-    expect(output.trim()).toBe('Feedback,Organization,ReviewCycle,User');
+    expect(output.trim()).toBe('Feedback,Organization,Review,ReviewCycle,User');
   });
 });
