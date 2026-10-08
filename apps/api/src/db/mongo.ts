@@ -1,6 +1,8 @@
 import mongoose from 'mongoose';
 import { env } from '../config/env.js';
 import { logger } from '../lib/logger.js';
+// Side-effect import: registers all models so populate() can find them by name.
+import '../models/index.js';
 
 /**
  * Mongoose keeps ONE connection pool per process and shares it with every
