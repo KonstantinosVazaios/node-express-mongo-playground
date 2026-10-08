@@ -1,4 +1,5 @@
 import express from 'express';
+import { errorHandler, notFoundHandler } from './middleware/error-handler.js';
 import { healthRouter } from './routes/health.routes.js';
 
 /**
@@ -22,6 +23,11 @@ export function createApp() {
   });
 
   app.use('/health', healthRouter);
+
+  // These two MUST come after every route: Express runs middleware in the
+  // order it was registered, so they only see requests nothing else handled.
+  app.use(notFoundHandler);
+  app.use(errorHandler);
 
   return app;
 }

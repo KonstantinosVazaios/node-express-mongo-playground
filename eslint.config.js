@@ -27,6 +27,16 @@ export default defineConfig(
     },
   },
   {
+    // Supertest types res.body as `any`. In tests, asserting on that `any` is
+    // the point, so the no-unsafe-* rules would only add noise there.
+    files: ['**/tests/**/*.ts', '**/*.test.ts', '**/*.test.tsx'],
+    rules: {
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+    },
+  },
+  {
     files: ['**/*.js'],
     extends: [tseslint.configs.disableTypeChecked],
   },
