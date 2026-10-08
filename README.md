@@ -118,6 +118,30 @@ apps/web                 React frontend (phase 5)
 packages/api-client      client generated from the OpenAPI spec (phase 4)
 ```
 
+### API endpoints
+
+Swagger UI arrives in phase 4. Until then, this is the full list (everything except `/health`
+and `/auth/login` needs the session cookie):
+
+| Method & path                       | Who                                | What                                                     |
+| ----------------------------------- | ---------------------------------- | -------------------------------------------------------- |
+| `POST /auth/login` · `/auth/logout` | anyone                             | session cookie in / out                                  |
+| `GET /auth/me`                      | any role                           | current user + organization                              |
+| `GET /users` · `/users/:id`         | any role                           | the organization's directory                             |
+| `GET /feedback`                     | any role (visibility)              | `?page&pageSize&q&employeeId`                            |
+| `POST /feedback`                    | any role                           | `{ employeeId, text, source? }`                          |
+| `GET/PATCH/DELETE /feedback/:id`    | visibility / author / author+admin |                                                          |
+| `GET /review-cycles` · `/:id`       | any role                           | `?status`                                                |
+| `POST /review-cycles`               | admin                              | `{ name, competencies, questions?, startsAt?, endsAt? }` |
+| `POST /review-cycles/:id/activate`  | admin                              | creates a review per managed employee                    |
+| `GET /reviews` · `/reviews/:id`     | any role (visibility)              | `?cycleId&employeeId&status`                             |
+| `PATCH /reviews/:id`                | reviewer or admin                  | `{ scores?, answers? }`                                  |
+| `POST /reviews/:id/submit`          | reviewer or admin                  | pending → submitted                                      |
+
+**Visibility:** admins see their whole organization, managers see themselves + their direct
+reports, employees see themselves (plus feedback they wrote). Another organization's data is
+always a **404**, never a 403.
+
 **Why npm workspaces (and not pnpm)?** npm ships with Node, so there is nothing to install, and
 for three packages its hoisted `node_modules` works fine. pnpm is faster and stricter: it uses a
 content-addressed store, and a package can only import dependencies it declares, so there are
@@ -214,6 +238,38 @@ The operator object never reaches MongoDB.
 image (`docker compose -f docker-compose.yml up`) they don't.
 
 **Request ids:** every response has an `X-Request-Id` header. Find it in `docker compose logs api`.
+
+**A full review flow, and tenant isolation** (after `docker compose exec api npm run seed`):
+
+```bash
+login() { curl -s -c "/tmp/$1" -H 'Content-Type: application/json' \
+  -d "{\"email\":\"$1\",\"password\":\"password123\"}" localhost:3000/auth/login > /dev/null; }
+login alice@acme.test; login maria@acme.test; login eve@acme.test; login gina@globex.test
+
+# Alice (admin) creates and activates a cycle -> one review per managed employee
+CYCLE=$(curl -s -b /tmp/alice@acme.test -H 'Content-Type: application/json' \
+  -d '{"name":"Q4 2026","competencies":["Communication","Ownership"],"questions":["What went well?"]}' \
+  localhost:3000/review-cycles | jq -r .id)
+curl -s -X POST -b /tmp/alice@acme.test localhost:3000/review-cycles/$CYCLE/activate | jq .status
+
+# Maria (manager) sees only her direct reports' reviews (Eve, Ethan), not Mike's team
+curl -s -b /tmp/maria@acme.test "localhost:3000/reviews?cycleId=$CYCLE" | jq '.items[].employee'
+REVIEW=$(curl -s -b /tmp/eve@acme.test localhost:3000/reviews | jq -r '.items[0].id')
+
+# Eve (employee) can read her review but not edit it (403)
+curl -s -o /dev/null -w '%{http_code}\n' -X PATCH -b /tmp/eve@acme.test \
+  -H 'Content-Type: application/json' -d '{"scores":[]}' localhost:3000/reviews/$REVIEW
+
+# Gina (Globex) asks for an Acme review by its real id: 404, not 403
+curl -s -b /tmp/gina@globex.test localhost:3000/reviews/$REVIEW | jq .error
+```
+
+Then try the same with feedback: `POST /feedback` as Eve about Emma, then list `/feedback` as
+Maria, Mike and Alice and compare what each of them sees.
+
+**See the tenant guard fail closed:** in `apps/api/src/services/user.service.ts`, remove
+`organizationId` from the `getUser` filter and run `npm test`. Instead of quietly returning
+another tenant's user, the query throws "Unscoped query on User".
 
 ## Laravel / FastAPI → Express cheat sheet
 
