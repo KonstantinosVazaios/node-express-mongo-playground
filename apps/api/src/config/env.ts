@@ -23,6 +23,9 @@ const EnvSchema = z.object({
     .string()
     .default('http://localhost:5173')
     .transform((value) => value.split(',').map((origin) => origin.trim())),
+  // bcrypt cost factor: each +1 doubles the hashing time. 12 is ~250ms, which
+  // is slow on purpose to make brute force expensive. Tests use 4 for speed.
+  BCRYPT_ROUNDS: z.coerce.number().int().min(4).max(15).default(12),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 });
 

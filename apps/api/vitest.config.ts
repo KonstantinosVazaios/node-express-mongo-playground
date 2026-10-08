@@ -12,6 +12,7 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       LOG_LEVEL: 'silent',
+      BCRYPT_ROUNDS: '4',
       MONGO_URL: 'mongodb://placeholder-see-global-setup',
       // No Redis in unit tests: tests that touch it mock src/db/redis.ts.
       REDIS_URL: 'redis://placeholder:6379',
