@@ -11,6 +11,9 @@ import { connectMongo, disconnectMongo } from '../../src/db/mongo.js';
 export function useTestDb() {
   beforeAll(async () => {
     await connectMongo(inject('mongoUri'), `test-${randomUUID()}`);
+    // Mongoose builds indexes in the background after connecting. Wait for
+    // them, so tests that rely on unique indexes (409s) are deterministic.
+    await Promise.all(Object.values(mongoose.models).map((model) => model.init()));
   });
 
   afterEach(async () => {

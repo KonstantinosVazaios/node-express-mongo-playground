@@ -8,6 +8,7 @@ import { corsMiddleware, securityHeaders } from './middleware/security.js';
 import { authRouter } from './routes/auth.routes.js';
 import { feedbackRouter } from './routes/feedback.routes.js';
 import { healthRouter } from './routes/health.routes.js';
+import { reviewCycleRouter } from './routes/review-cycle.routes.js';
 import { userRouter } from './routes/user.routes.js';
 
 /**
@@ -64,6 +65,7 @@ export function createApp() {
   app.use('/auth', authRouter);
   app.use('/users', userRouter);
   app.use('/feedback', feedbackRouter);
+  app.use('/review-cycles', reviewCycleRouter);
 
   app.use(notFoundHandler); // 7
   app.use(errorHandler); // 8
