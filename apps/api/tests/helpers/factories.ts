@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import type { Types } from 'mongoose';
+import { FeedbackModel } from '../../src/models/feedback.model.js';
 import { OrganizationModel } from '../../src/models/organization.model.js';
 import { type Role, UserModel } from '../../src/models/user.model.js';
 
@@ -23,5 +24,18 @@ export function createUser(
     password: TEST_PASSWORD,
     role: overrides.role ?? 'employee',
     managerId: overrides.managerId ?? null,
+  });
+}
+
+export function createFeedback(
+  author: { _id: Types.ObjectId; organizationId: Types.ObjectId },
+  employee: { _id: Types.ObjectId },
+  text = 'Great work on the release',
+) {
+  return FeedbackModel.create({
+    organizationId: author.organizationId,
+    authorId: author._id,
+    employeeId: employee._id,
+    text,
   });
 }
