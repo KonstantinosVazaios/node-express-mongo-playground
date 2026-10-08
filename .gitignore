@@ -22,5 +22,5 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 
-# Client generated with openapi-generator-cli for side-by-side comparison only
-packages/api-client-openapi-generator/
+# Clients generated with openapi-generator-cli for side-by-side comparison only
+compare/

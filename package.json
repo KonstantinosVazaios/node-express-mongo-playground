@@ -22,7 +22,8 @@
     "seed": "npm run seed --workspace @hr/api",
     "openapi:write": "npm run openapi:write --workspace @hr/api",
     "generate:client": "npm run openapi:write && npm run generate --workspace @hr/api-client",
-    "check:client": "npm run generate:client && git diff --exit-code -- openapi.json packages/api-client/src/generated && test -z \"$(git status --porcelain -- openapi.json packages/api-client/src/generated)\""
+    "check:client": "npm run generate:client && git diff --exit-code -- openapi.json packages/api-client/src/generated && test -z \"$(git status --porcelain -- openapi.json packages/api-client/src/generated)\"",
+    "generate:client:compare": "./scripts/generate-openapi-generator-clients.sh"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
