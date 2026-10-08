@@ -41,13 +41,15 @@ To run the production-like images instead:
 docker compose -f docker-compose.yml up --build
 ```
 
-| What          | URL                          | Notes                                   |
-| ------------- | ---------------------------- | --------------------------------------- |
-| API           | http://localhost:3000        |                                         |
-| Health check  | http://localhost:3000/health | pings Mongo + Redis, 503 if one is down |
-| mongo-express | http://localhost:8081        | login `admin` / `admin`                 |
-| MongoDB       | `localhost:27017`            | single-node replica set `rs0`           |
-| Redis         | `localhost:6379`             |                                         |
+| What          | URL                                | Notes                                          |
+| ------------- | ---------------------------------- | ---------------------------------------------- |
+| API           | http://localhost:3000              |                                                |
+| Health check  | http://localhost:3000/health       | pings Mongo + Redis, 503 if one is down        |
+| Swagger UI    | http://localhost:3000/docs         | log in with "Try it out" on `POST /auth/login` |
+| OpenAPI spec  | http://localhost:3000/openapi.json | also committed as `openapi.json`               |
+| mongo-express | http://localhost:8081              | login `admin` / `admin`                        |
+| MongoDB       | `localhost:27017`                  | single-node replica set `rs0`                  |
+| Redis         | `localhost:6379`                   |                                                |
 
 To connect to Mongo from your machine (Compass, mongosh, `npm run dev`), use
 `mongodb://localhost:27017/hr?directConnection=true`. The replica set advertises its member as
@@ -120,8 +122,8 @@ packages/api-client      client generated from the OpenAPI spec (phase 4)
 
 ### API endpoints
 
-Swagger UI arrives in phase 4. Until then, this is the full list (everything except `/health`
-and `/auth/login` needs the session cookie):
+The interactive version is Swagger UI at http://localhost:3000/docs. Here is the overview (everything
+except `/health` and `/auth/*` login/logout needs the session cookie):
 
 | Method & path                       | Who                                | What                                                     |
 | ----------------------------------- | ---------------------------------- | -------------------------------------------------------- |
@@ -153,7 +155,57 @@ _Coming in phase 5._
 
 ## From Zod schema to React component
 
-_Coming in phase 4._
+One Zod schema is the single source of truth. Follow `CreateFeedbackBodySchema`:
+
+| Step                     | What it becomes                                                                             | Where                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| 1. Zod schema            | `z.object({ employeeId, text, source })` + `.meta({ id: 'CreateFeedbackRequest' })`         | `apps/api/src/schemas/feedback.schema.ts`                        |
+| 2. Runtime validation    | `validate({ body: CreateFeedbackBodySchema })`: 400 + field errors                          | `apps/api/src/routes/feedback.routes.ts`                         |
+| 3. Server-side TS type   | `z.infer` → `CreateFeedbackBody`; `validate()`'s generic types `req.body` in the controller | `apps/api/src/controllers/feedback.controller.ts`                |
+| 4. OpenAPI operation     | `registerPath({ operationId: 'createFeedback', request: { body: … } })`                     | `apps/api/src/openapi/paths/feedback.paths.ts`                   |
+| 5. OpenAPI document      | `components.schemas.CreateFeedbackRequest` + `POST /feedback`                               | `openapi.json` (`npm run openapi:write`)                         |
+| 6. Client types          | `export type CreateFeedbackRequest = { employeeId: string; text: string; … }`               | `packages/api-client/src/generated/types.gen.ts`                 |
+| 7. Client function       | `createFeedback({ body })`, named after the `operationId`                                   | `packages/api-client/src/generated/sdk.gen.ts`                   |
+| 8. TanStack Query helper | `createFeedbackMutation()` → `useMutation({ ...createFeedbackMutation() })`                 | `packages/api-client/src/generated/@tanstack/react-query.gen.ts` |
+| 9. React component       | the feedback form (phase 5)                                                                 | `apps/web/src/…`                                                 |
+
+Errors follow the same chain: `ErrorResponseSchema` → `components.schemas.ErrorResponse` → the
+generated `CreateFeedbackError` type. The fetch client **throws the parsed error body**, so the UI
+switches on `error.error.code` (`isErrorResponse()` in `packages/api-client/src/index.ts`).
+
+```bash
+npm run generate:client   # 1) openapi.json from the Zod schemas  2) regenerate packages/api-client
+npm run check:client      # same, then fail if anything differs from what's committed (CI drift check)
+```
+
+`openapi:write` needs **no database, Redis or secrets**: the schemas only import
+`apps/api/src/domain/constants.ts`, never models or `config/env.ts` (a test enforces this).
+
+### Code-first vs spec-first
+
+- **Code-first (this repo, and FastAPI):** you write code. The validation schemas _are_ the
+  contract, and the spec is generated from them, so docs can't drift from behaviour. Best when
+  one backend owns the API and moves fast.
+- **Spec-first:** you hand-write `openapi.yaml`, agree on it with other teams, then generate
+  server stubs and clients. Best when several teams or languages share a contract before code
+  exists. The cost: the YAML is a second language to maintain, and the server still needs its own
+  validation, which can drift from the spec.
+
+Here the Express routes (`routes/`) and the OpenAPI paths (`openapi/paths/`) are declared
+separately, but they share the same schemas, and `tests/openapi-routes.test.ts` fails if a
+documented operation isn't actually routed.
+
+### Choosing a client generator
+
+| Tool                                                              | Generates                                                                                                  | Feels like                                                             | Choose it when                                                                                     |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| **@hey-api/openapi-ts** (used here)                               | types + one function per `operationId` + a small fetch runtime + optional plugins (TanStack Query, Zod, …) | `createFeedback({ body })`, `useQuery(listFeedbackOptions({ query }))` | TS/React frontends that want typed hooks with no runtime dependency; pre-1.0, so pin it            |
+| **openapi-generator-cli** `typescript-fetch` / `typescript-axios` | one class per tag, model interfaces, `FromJSON`/`ToJSON` mappers (dates → `Date`), a runtime               | `new FeedbackApi(config).createFeedback({ createFeedbackRequest })`    | many target languages from one spec, enterprise/Java ecosystems; heavier, OpenAPI 3.1 still "beta" |
+| **openapi-typescript + openapi-fetch**                            | **types only** (a `paths` interface); a ~6 kB generic typed `fetch` wrapper                                | `client.POST('/feedback', { body })`, path strings type-checked        | the smallest possible footprint: no generated runtime code, URLs stay visible in the call          |
+
+See for yourself: `npm run generate:client:compare` runs openapi-generator-cli (via Docker, no
+Java needed) on the same `openapi.json` into `compare/openapi-generator/` (git-ignored), next to
+`packages/api-client/src/generated/`.
 
 ## Concepts map
 
@@ -266,6 +318,18 @@ curl -s -b /tmp/gina@globex.test localhost:3000/reviews/$REVIEW | jq .error
 
 Then try the same with feedback: `POST /feedback` as Eve about Emma, then list `/feedback` as
 Maria, Mike and Alice and compare what each of them sees.
+
+**Swagger UI:** open http://localhost:3000/docs, expand `POST /auth/login`, "Try it out" with
+`maria@acme.test` / `password123`, then try `GET /feedback` or `GET /reviews`. No token to paste:
+the browser sends the httpOnly cookie because Swagger UI is served by the API itself.
+
+**The spec and the client:**
+
+```bash
+curl -s localhost:3000/openapi.json | jq '.components.schemas | keys'
+npm run generate:client && git status    # nothing changes: the committed client is up to date
+npm run generate:client:compare          # optional: openapi-generator-cli output, side by side
+```
 
 **See the tenant guard fail closed:** in `apps/api/src/services/user.service.ts`, remove
 `organizationId` from the `getUser` filter and run `npm test`. Instead of quietly returning
