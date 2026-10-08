@@ -27,3 +27,7 @@ export async function createCycle(
   const cycle = await cycleService.createCycle(currentUser(req), req.body);
   res.status(201).location(`/review-cycles/${cycle.id}`).json(cycle);
 }
+
+export async function activateCycle(req: Request<IdParams>, res: Response<ReviewCycleDto>) {
+  res.json(await cycleService.activateCycle(currentUser(req), req.params.id));
+}

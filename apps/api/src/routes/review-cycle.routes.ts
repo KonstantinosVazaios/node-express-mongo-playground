@@ -27,3 +27,12 @@ reviewCycleRouter.post(
   validate({ body: CreateReviewCycleBodySchema }),
   cycleController.createCycle,
 );
+// An action endpoint (POST /:id/activate) rather than PATCH { status }: a
+// state transition with side effects (it creates reviews) is clearer as an
+// explicit verb, and each transition can have its own rules.
+reviewCycleRouter.post(
+  '/:id/activate',
+  requireRole('admin'),
+  validate({ params: IdParamsSchema }),
+  cycleController.activateCycle,
+);

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
+import { ReviewModel } from '../src/models/review.model.js';
 import type { UserDocument } from '../src/models/user.model.js';
 import { loginAs } from './helpers/auth.js';
 import { useTestDb } from './helpers/db.js';
@@ -95,5 +96,49 @@ describe('GET /review-cycles', () => {
     const res = await (await loginAs(app, admin)).get(`/review-cycles/${created.body.id}`);
 
     expect(res.status).toBe(404);
+  });
+});
+
+describe('POST /review-cycles/:id/activate', () => {
+  it('activates a draft cycle and creates one review per managed employee', async () => {
+    const org = admin.organizationId;
+    const manager = await createUser(org, { role: 'manager' });
+    const report = await createUser(org, { managerId: manager._id });
+    const agent = await loginAs(app, admin);
+    const cycle = await agent.post('/review-cycles').send(validCycle);
+
+    const res = await agent.post(`/review-cycles/${cycle.body.id}/activate`);
+
+    expect(res.status).toBe(200);
+    expect(res.body.status).toBe('active');
+    const reviews = await ReviewModel.find({ organizationId: org }).lean();
+    // Only `report` has a manager (admin, employee and manager don't).
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]).toMatchObject({
+      employeeId: report._id,
+      reviewerId: manager._id,
+      status: 'pending',
+      answers: [expect.objectContaining({ question: 'What went well this quarter?', answer: '' })],
+    });
+  });
+
+  it('refuses to activate twice (409)', async () => {
+    const agent = await loginAs(app, admin);
+    const cycle = await agent.post('/review-cycles').send(validCycle);
+    await agent.post(`/review-cycles/${cycle.body.id}/activate`).expect(200);
+
+    const again = await agent.post(`/review-cycles/${cycle.body.id}/activate`);
+
+    expect(again.status).toBe(409);
+  });
+
+  it('is admin-only', async () => {
+    const cycle = await (await loginAs(app, admin)).post('/review-cycles').send(validCycle);
+
+    const res = await (
+      await loginAs(app, employee)
+    ).post(`/review-cycles/${cycle.body.id}/activate`);
+
+    expect(res.status).toBe(403);
   });
 });
