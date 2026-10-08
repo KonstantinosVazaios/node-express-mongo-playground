@@ -6,6 +6,7 @@ import { httpLogger } from './middleware/http-logger.js';
 import { requestId } from './middleware/request-id.js';
 import { corsMiddleware, securityHeaders } from './middleware/security.js';
 import { authRouter } from './routes/auth.routes.js';
+import { docsRouter } from './routes/docs.routes.js';
 import { feedbackRouter } from './routes/feedback.routes.js';
 import { healthRouter } from './routes/health.routes.js';
 import { reviewCycleRouter } from './routes/review-cycle.routes.js';
@@ -62,6 +63,7 @@ export function createApp() {
   app.get('/', (_req, res) => {
     res.json({ name: 'hr-api', docs: '/docs' });
   });
+  app.use(docsRouter); // GET /openapi.json + Swagger UI at /docs
   app.use('/health', healthRouter);
   app.use('/auth', authRouter);
   app.use('/users', userRouter);
