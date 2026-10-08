@@ -13,6 +13,7 @@ export default defineConfig({
       NODE_ENV: 'test',
       LOG_LEVEL: 'silent',
       BCRYPT_ROUNDS: '4',
+      JWT_SECRET: 'test-secret-that-is-at-least-32-characters-long',
       MONGO_URL: 'mongodb://placeholder-see-global-setup',
       // No Redis in unit tests: tests that touch it mock src/db/redis.ts.
       REDIS_URL: 'redis://placeholder:6379',

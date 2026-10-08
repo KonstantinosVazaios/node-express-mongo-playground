@@ -4,6 +4,7 @@ import { parseEnv } from '../src/config/env.js';
 const required = {
   MONGO_URL: 'mongodb://localhost:27017/hr',
   REDIS_URL: 'redis://localhost:6379',
+  JWT_SECRET: 'x'.repeat(32),
 };
 
 describe('parseEnv', () => {

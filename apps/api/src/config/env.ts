@@ -23,6 +23,13 @@ const EnvSchema = z.object({
     .string()
     .default('http://localhost:5173')
     .transform((value) => value.split(',').map((origin) => origin.trim())),
+  // Signs the session JWTs. Anyone holding it can mint a token for any user.
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  JWT_TTL_SECONDS: z.coerce
+    .number()
+    .int()
+    .positive()
+    .default(8 * 60 * 60),
   // bcrypt cost factor: each +1 doubles the hashing time. 12 is ~250ms, which
   // is slow on purpose to make brute force expensive. Tests use 4 for speed.
   BCRYPT_ROUNDS: z.coerce.number().int().min(4).max(15).default(12),
