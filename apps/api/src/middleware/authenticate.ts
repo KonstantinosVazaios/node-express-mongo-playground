@@ -1,4 +1,4 @@
-import type { Request, RequestHandler } from 'express';
+import type { RequestHandler } from 'express';
 import { AUTH_COOKIE } from '../lib/auth-cookie.js';
 import { UnauthorizedError } from '../lib/errors.js';
 import { getSessionUser } from '../services/auth.service.js';
@@ -23,7 +23,9 @@ export const authenticate: RequestHandler = async (req, _res, next) => {
 };
 
 /** For controllers behind `authenticate`: returns req.user typed as non-null. */
-export function currentUser(req: Request): AuthUser {
+// Typed structurally (anything with an optional `user`) so it accepts a
+// Request with any params/query/body generics.
+export function currentUser(req: { user?: AuthUser | undefined }): AuthUser {
   if (!req.user) throw new UnauthorizedError();
   return req.user;
 }

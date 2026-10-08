@@ -1,13 +1,16 @@
-import type { RequestHandler } from 'express';
+import type { Request, RequestHandler } from 'express';
 import type { z } from 'zod';
 import { ValidationError } from '../lib/errors.js';
 import type { FieldError } from '../schemas/error.schema.js';
 
-interface RequestSchemas {
-  body?: z.ZodType;
-  params?: z.ZodType;
-  query?: z.ZodType;
+interface RequestSchemas<P, Q, B> {
+  params?: P;
+  query?: Q;
+  body?: B;
 }
+
+// The parsed type of a schema, or Express's own default when none was given.
+type Parsed<S, Default> = S extends z.ZodType ? z.output<S> : Default;
 
 const LOCATIONS = ['params', 'query', 'body'] as const;
 
@@ -25,8 +28,23 @@ const LOCATIONS = ['params', 'query', 'body'] as const;
  * controller only ever sees clean data. On failure, every problem in every
  * location is collected into one 400 with field-level errors.
  */
-export function validate(schemas: RequestSchemas): RequestHandler {
-  return (req, _res, next) => {
+export function validate<
+  P extends z.ZodType | undefined = undefined,
+  Q extends z.ZodType | undefined = undefined,
+  B extends z.ZodType | undefined = undefined,
+>(
+  schemas: RequestSchemas<P, Q, B>,
+  // The return type carries the schemas' output types, so Express infers
+  // req.params / req.query / req.body for the NEXT handlers on the route. If
+  // a controller expects a different shape than what was validated, it's a
+  // compile error: the schema stays the single source of truth.
+): RequestHandler<
+  Parsed<P, Request['params']>,
+  unknown,
+  Parsed<B, unknown>,
+  Parsed<Q, Request['query']>
+> {
+  const middleware: RequestHandler = (req, _res, next) => {
     const fields: FieldError[] = [];
 
     for (const location of LOCATIONS) {
@@ -58,4 +76,13 @@ export function validate(schemas: RequestSchemas): RequestHandler {
     if (fields.length > 0) throw new ValidationError(fields);
     next();
   };
+
+  // The one cast in this file. It is honest: the code above guarantees at
+  // runtime that req.params/query/body now hold exactly these parsed types.
+  return middleware as RequestHandler<
+    Parsed<P, Request['params']>,
+    unknown,
+    Parsed<B, unknown>,
+    Parsed<Q, Request['query']>
+  >;
 }
