@@ -1,5 +1,5 @@
 import { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
-import { AUTH_COOKIE } from '../lib/auth-cookie.js';
+import { AUTH_COOKIE } from '../domain/constants.js';
 
 /**
  * A fresh registry with the pieces every path shares. A factory instead of a

@@ -1,8 +1,6 @@
 import { type HydratedDocument, type InferSchemaType, Schema, model } from 'mongoose';
+import { FEEDBACK_SOURCES } from '../domain/constants.js';
 import { tenantGuard } from './plugins/tenant-guard.js';
-
-export const FEEDBACK_SOURCES = ['manual', 'slack', 'email'] as const;
-export type FeedbackSource = (typeof FEEDBACK_SOURCES)[number];
 
 /**
  * EMBED vs REFERENCE: Feedback is its own collection that REFERENCES users,

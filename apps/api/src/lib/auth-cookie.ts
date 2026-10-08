@@ -1,8 +1,6 @@
 import type { CookieOptions } from 'express';
 import { env } from '../config/env.js';
 
-export const AUTH_COOKIE = 'hr_session';
-
 /**
  * Why a cookie and not `Authorization: Bearer` from localStorage?
  * - httpOnly: page JavaScript can't read it, so an XSS bug can't steal the token.

@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import { z } from 'zod';
-import { CYCLE_STATUSES } from '../models/review-cycle.model.js';
+import { CYCLE_STATUSES } from '../domain/constants.js';
 import { PaginationQuerySchema, paginated } from './common.schema.js';
 
 export const CycleStatusSchema = z.enum(CYCLE_STATUSES);

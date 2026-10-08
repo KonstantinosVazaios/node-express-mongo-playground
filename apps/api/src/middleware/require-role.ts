@@ -1,6 +1,6 @@
 import type { RequestHandler } from 'express';
 import { ForbiddenError } from '../lib/errors.js';
-import type { Role } from '../models/user.model.js';
+import type { Role } from '../domain/constants.js';
 import { currentUser } from './authenticate.js';
 
 /**

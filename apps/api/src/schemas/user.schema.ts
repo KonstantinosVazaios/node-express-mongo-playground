@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import { z } from 'zod';
-import { ROLES } from '../models/user.model.js';
+import { ROLES } from '../domain/constants.js';
 import { ObjectIdSchema, PaginationQuerySchema, paginated } from './common.schema.js';
 
 export const RoleSchema = z.enum(ROLES);

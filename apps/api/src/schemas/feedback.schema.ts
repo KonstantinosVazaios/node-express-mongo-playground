@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import { z } from 'zod';
-import { FEEDBACK_SOURCES } from '../models/feedback.model.js';
+import { FEEDBACK_SOURCES } from '../domain/constants.js';
 import {
   ObjectIdSchema,
   PaginationQuerySchema,

@@ -1,4 +1,4 @@
-import type { Role } from '../models/user.model.js';
+import type { Role } from '../domain/constants.js';
 
 /** The authenticated user, as attached to `req.user` by the authenticate middleware. */
 export interface AuthUser {

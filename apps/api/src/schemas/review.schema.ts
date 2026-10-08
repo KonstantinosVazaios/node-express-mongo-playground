@@ -1,6 +1,6 @@
 import type { Types } from 'mongoose';
 import { z } from 'zod';
-import { REVIEW_STATUSES } from '../models/review.model.js';
+import { REVIEW_STATUSES } from '../domain/constants.js';
 import {
   ObjectIdSchema,
   PaginationQuerySchema,

@@ -7,7 +7,8 @@ import { FeedbackModel } from '../src/models/feedback.model.js';
 import { OrganizationModel } from '../src/models/organization.model.js';
 import { ReviewCycleModel } from '../src/models/review-cycle.model.js';
 import { ReviewModel } from '../src/models/review.model.js';
-import { type Role, UserModel } from '../src/models/user.model.js';
+import type { Role } from '../src/domain/constants.js';
+import { UserModel } from '../src/models/user.model.js';
 
 /** Every seeded user has this password (see README). */
 export const SEED_PASSWORD = 'password123';

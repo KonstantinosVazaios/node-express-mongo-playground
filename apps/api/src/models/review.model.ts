@@ -1,8 +1,6 @@
 import { type HydratedDocument, type InferSchemaType, Schema, model } from 'mongoose';
+import { REVIEW_STATUSES } from '../domain/constants.js';
 import { tenantGuard } from './plugins/tenant-guard.js';
-
-export const REVIEW_STATUSES = ['pending', 'submitted'] as const;
-export type ReviewStatus = (typeof REVIEW_STATUSES)[number];
 
 // Sub-schemas for EMBEDDED documents. They live inside the review document
 // itself, so there's no separate collection, no join, and they're read and

@@ -1,10 +1,8 @@
 import bcrypt from 'bcrypt';
 import { type HydratedDocument, type InferSchemaType, Schema, model } from 'mongoose';
+import { ROLES } from '../domain/constants.js';
 import { env } from '../config/env.js';
 import { tenantGuard } from './plugins/tenant-guard.js';
-
-export const ROLES = ['admin', 'manager', 'employee'] as const;
-export type Role = (typeof ROLES)[number];
 
 const userSchema = new Schema(
   {

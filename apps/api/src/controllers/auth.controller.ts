@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
-import { AUTH_COOKIE, authCookieOptions } from '../lib/auth-cookie.js';
+import { AUTH_COOKIE } from '../domain/constants.js';
+import { authCookieOptions } from '../lib/auth-cookie.js';
 import { currentUser } from '../middleware/authenticate.js';
 import type { AuthUserResponse, LoginBody, MeResponse } from '../schemas/auth.schema.js';
 import * as authService from '../services/auth.service.js';

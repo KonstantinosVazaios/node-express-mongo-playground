@@ -1,3 +1,4 @@
+import { execFileSync } from 'node:child_process';
 import { validate } from '@readme/openapi-parser';
 import { describe, expect, it } from 'vitest';
 import { generateOpenApiDocument } from '../src/openapi/generator.js';
@@ -40,5 +41,24 @@ describe('OpenAPI document', () => {
   it('documents the shared error shape as a component', () => {
     expect(document.components?.schemas).toHaveProperty('ErrorResponse');
     expect(document.components?.securitySchemes).toHaveProperty('cookieAuth');
+  });
+});
+
+describe('OpenAPI generation', () => {
+  it('runs without a database, Redis or any secrets', () => {
+    // A fresh process with an EMPTY environment (only PATH). If anything the
+    // generator imports reached config/env.ts, Mongoose models or bcrypt,
+    // env validation would crash it. CI regenerates the client like this.
+    const script = `(async () => {
+      const { generateOpenApiDocument } = await import('./src/openapi/generator.ts');
+      console.log(Object.keys(generateOpenApiDocument().paths).length);
+    })()`;
+    const output = execFileSync('npx', ['tsx', '--eval', script], {
+      cwd: new URL('..', import.meta.url),
+      env: { PATH: process.env.PATH },
+      encoding: 'utf8',
+    });
+
+    expect(Number(output.trim())).toBeGreaterThan(0);
   });
 });

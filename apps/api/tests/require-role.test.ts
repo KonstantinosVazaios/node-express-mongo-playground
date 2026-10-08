@@ -3,7 +3,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 import { errorHandler } from '../src/middleware/error-handler.js';
 import { requireRole } from '../src/middleware/require-role.js';
-import type { Role } from '../src/models/user.model.js';
+import type { Role } from '../src/domain/constants.js';
 
 // Stand-in for `authenticate`: pretend a user with this role is logged in.
 const actingAs =

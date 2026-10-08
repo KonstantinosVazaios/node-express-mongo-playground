@@ -2,9 +2,10 @@ import { randomUUID } from 'node:crypto';
 import type { Types } from 'mongoose';
 import { FeedbackModel } from '../../src/models/feedback.model.js';
 import { OrganizationModel } from '../../src/models/organization.model.js';
-import { type CycleStatus, ReviewCycleModel } from '../../src/models/review-cycle.model.js';
+import type { CycleStatus, Role } from '../../src/domain/constants.js';
+import { ReviewCycleModel } from '../../src/models/review-cycle.model.js';
 import { ReviewModel } from '../../src/models/review.model.js';
-import { type Role, UserModel } from '../../src/models/user.model.js';
+import { UserModel } from '../../src/models/user.model.js';
 
 export const TEST_PASSWORD = 'password123';
 

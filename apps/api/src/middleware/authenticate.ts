@@ -1,5 +1,5 @@
 import type { RequestHandler } from 'express';
-import { AUTH_COOKIE } from '../lib/auth-cookie.js';
+import { AUTH_COOKIE } from '../domain/constants.js';
 import { UnauthorizedError } from '../lib/errors.js';
 import { getSessionUser } from '../services/auth.service.js';
 import type { AuthUser } from '../types/auth.js';

@@ -1,9 +1,6 @@
 import { type HydratedDocument, type InferSchemaType, Schema, model } from 'mongoose';
+import { CYCLE_STATUSES } from '../domain/constants.js';
 import { tenantGuard } from './plugins/tenant-guard.js';
-
-/** draft -> active -> closed. Only forward; a closed cycle is read-only. */
-export const CYCLE_STATUSES = ['draft', 'active', 'closed'] as const;
-export type CycleStatus = (typeof CYCLE_STATUSES)[number];
 
 const reviewCycleSchema = new Schema(
   {
