@@ -239,7 +239,7 @@ image (`docker compose -f docker-compose.yml up`) they don't.
 
 **Request ids:** every response has an `X-Request-Id` header. Find it in `docker compose logs api`.
 
-**A full review flow, and tenant isolation** (after `docker compose exec api npm run seed`):
+**A full review flow, and tenant isolation** (after `docker compose exec api npm run seed`; needs `jq`):
 
 ```bash
 login() { curl -s -c "/tmp/$1" -H 'Content-Type: application/json' \
