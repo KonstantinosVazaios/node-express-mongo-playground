@@ -44,13 +44,15 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   // 4xx errors are the client's problem and expected. 5xx errors are bugs:
   // log them with the full stack.
   if (appError.statusCode >= 500) {
-    logger.error({ err }, 'Unhandled error');
+    logger.error({ err, requestId: req.requestId }, 'Unhandled error');
   }
 
   const body: ErrorResponse = {
     error: {
       code: appError.code,
       message: appError.message,
+      // Undefined only in tests that build a bare app without the middleware.
+      ...(req.requestId && { requestId: req.requestId }),
       ...(appError.fields && { fields: appError.fields }),
       // Stack traces reveal file paths, library versions and code structure,
       // so they're shown only in development, never in production.

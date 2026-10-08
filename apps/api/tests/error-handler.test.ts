@@ -91,7 +91,11 @@ describe('error handling', () => {
 
     expect(res.status).toBe(404);
     expect(res.body).toEqual({
-      error: { code: 'NOT_FOUND', message: 'Route GET /does-not-exist not found' },
+      error: {
+        code: 'NOT_FOUND',
+        message: 'Route GET /does-not-exist not found',
+        requestId: expect.any(String),
+      },
     });
   });
 });
