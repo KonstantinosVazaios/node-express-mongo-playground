@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
 import { AUTH_COOKIE, authCookieOptions } from '../lib/auth-cookie.js';
-import type { AuthUserResponse, LoginBody } from '../schemas/auth.schema.js';
+import { currentUser } from '../middleware/authenticate.js';
+import type { AuthUserResponse, LoginBody, MeResponse } from '../schemas/auth.schema.js';
 import * as authService from '../services/auth.service.js';
 
 // Request<Params, ResBody, ReqBody>: the validate() middleware guarantees
@@ -17,4 +18,8 @@ export function logout(_req: Request, res: Response) {
   const { maxAge: _maxAge, ...options } = authCookieOptions();
   res.clearCookie(AUTH_COOKIE, options);
   res.status(204).end();
+}
+
+export async function me(req: Request, res: Response<MeResponse>) {
+  res.json(await authService.getMe(currentUser(req).id));
 }

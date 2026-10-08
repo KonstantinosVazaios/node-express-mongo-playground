@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { createApp } from '../src/app.js';
+import { UserModel } from '../src/models/user.model.js';
 import { useTestDb } from './helpers/db.js';
 import { TEST_PASSWORD, createOrganization, createUser } from './helpers/factories.js';
 
@@ -65,5 +66,54 @@ describe('POST /auth/logout', () => {
 
     expect(res.status).toBe(204);
     expect(res.get('Set-Cookie')?.[0]).toMatch(/^hr_session=;.*Expires=Thu, 01 Jan 1970/);
+  });
+});
+
+describe('GET /auth/me (authenticate middleware)', () => {
+  it('returns 401 without a session cookie', async () => {
+    const res = await request(app).get('/auth/me');
+
+    expect(res.status).toBe(401);
+    expect(res.body.error.code).toBe('UNAUTHORIZED');
+  });
+
+  it('returns the user and their organization when logged in', async () => {
+    // An agent keeps cookies between requests, like a browser.
+    const agent = request.agent(app);
+    await agent.post('/auth/login').send({ email, password: TEST_PASSWORD }).expect(200);
+
+    const res = await agent.get('/auth/me');
+
+    expect(res.status).toBe(200);
+    expect(res.body.user.email).toBe(email);
+    expect(res.body.organization).toMatchObject({ name: 'Acme Corp' });
+  });
+
+  it('rejects a tampered token', async () => {
+    const login = await request(app).post('/auth/login').send({ email, password: TEST_PASSWORD });
+    const token = /hr_session=([^;]+)/.exec(login.get('Set-Cookie')?.[0] ?? '')?.[1] ?? '';
+    const [header, payload, signature] = token.split('.');
+    const forged = Buffer.from(
+      JSON.stringify({
+        ...JSON.parse(Buffer.from(payload!, 'base64url').toString()),
+        role: 'admin',
+      }),
+    ).toString('base64url');
+
+    const res = await request(app)
+      .get('/auth/me')
+      .set('Cookie', `hr_session=${header}.${forged}.${signature}`);
+
+    expect(res.status).toBe(401);
+  });
+
+  it('rejects the session of a user that no longer exists', async () => {
+    const agent = request.agent(app);
+    await agent.post('/auth/login').send({ email, password: TEST_PASSWORD }).expect(200);
+    await UserModel.deleteOne({ email });
+
+    const res = await agent.get('/auth/me');
+
+    expect(res.status).toBe(401);
   });
 });
