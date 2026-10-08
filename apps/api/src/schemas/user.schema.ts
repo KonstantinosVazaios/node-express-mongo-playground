@@ -1,6 +1,7 @@
 import type { Types } from 'mongoose';
 import { z } from 'zod';
 import { ROLES } from '../models/user.model.js';
+import { ObjectIdSchema, PaginationQuerySchema, paginated } from './common.schema.js';
 
 export const RoleSchema = z.enum(ROLES);
 
@@ -17,6 +18,18 @@ export const UserSchema = z.object({
 });
 
 export type UserDto = z.infer<typeof UserSchema>;
+
+export const UserListSchema = paginated(UserSchema);
+export type UserList = z.infer<typeof UserListSchema>;
+
+// strictObject: unknown query params are a 400, not silently ignored. It also
+// makes probes like ?role[$ne]=x fail loudly (see the NoSQL injection tests).
+export const ListUsersQuerySchema = z.strictObject({
+  ...PaginationQuerySchema.shape,
+  role: RoleSchema.optional(),
+  managerId: ObjectIdSchema.optional(),
+});
+export type ListUsersQuery = z.infer<typeof ListUsersQuerySchema>;
 
 interface UserLike {
   _id: Types.ObjectId;

@@ -7,6 +7,7 @@ import { requestId } from './middleware/request-id.js';
 import { corsMiddleware, securityHeaders } from './middleware/security.js';
 import { authRouter } from './routes/auth.routes.js';
 import { healthRouter } from './routes/health.routes.js';
+import { userRouter } from './routes/user.routes.js';
 
 /**
  * Builds the Express app WITHOUT calling listen().
@@ -60,6 +61,7 @@ export function createApp() {
   });
   app.use('/health', healthRouter);
   app.use('/auth', authRouter);
+  app.use('/users', userRouter);
 
   app.use(notFoundHandler); // 7
   app.use(errorHandler); // 8
