@@ -1,6 +1,8 @@
 import { OpenApiGeneratorV31 } from '@asteasolutions/zod-to-openapi';
 import { registerAuthPaths } from './paths/auth.paths.js';
 import { registerFeedbackPaths } from './paths/feedback.paths.js';
+import { registerReviewCyclePaths } from './paths/review-cycles.paths.js';
+import { registerReviewPaths } from './paths/reviews.paths.js';
 import { registerSystemPaths } from './paths/system.paths.js';
 import { registerUserPaths } from './paths/users.paths.js';
 import { createRegistry } from './registry.js';
@@ -24,6 +26,8 @@ export function generateOpenApiDocument() {
   registerAuthPaths(registry);
   registerUserPaths(registry);
   registerFeedbackPaths(registry);
+  registerReviewCyclePaths(registry);
+  registerReviewPaths(registry);
 
   return new OpenApiGeneratorV31(registry.definitions).generateDocument({
     openapi: '3.1.0',
@@ -38,6 +42,8 @@ export function generateOpenApiDocument() {
       { name: 'Auth', description: 'Session cookie login/logout' },
       { name: 'Users', description: 'The organization directory' },
       { name: 'Feedback', description: 'Feedback about colleagues' },
+      { name: 'Review cycles', description: 'Performance review periods (admin-managed)' },
+      { name: 'Reviews', description: 'One review per employee per cycle' },
       { name: 'System', description: 'Health and operations' },
     ],
   });

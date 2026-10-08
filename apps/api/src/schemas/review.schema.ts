@@ -12,41 +12,47 @@ import { CycleStatusSchema } from './review-cycle.schema.js';
 
 export const ReviewStatusSchema = z.enum(REVIEW_STATUSES);
 
-export const ScoreSchema = z.object({
-  competency: z.string(),
-  score: z.number().int().min(1).max(5),
-});
+export const ScoreSchema = z
+  .object({
+    competency: z.string(),
+    score: z.number().int().min(1).max(5),
+  })
+  .meta({ id: 'Score' });
 
-export const AnswerSchema = z.object({
-  id: z.string(),
-  question: z.string(),
-  answer: z.string(),
-});
+export const AnswerSchema = z
+  .object({
+    id: z.string(),
+    question: z.string(),
+    answer: z.string(),
+  })
+  .meta({ id: 'Answer' });
 
-export const ReviewSchema = z.object({
-  id: z.string(),
-  cycle: z.object({ id: z.string(), name: z.string(), status: CycleStatusSchema }),
-  employee: UserRefSchema,
-  reviewer: UserRefSchema.nullable(),
-  status: ReviewStatusSchema,
-  locked: z.boolean(),
-  scores: z.array(ScoreSchema),
-  answers: z.array(AnswerSchema),
-  averageScore: z.number().nullable(),
-  submittedAt: z.iso.datetime().nullable(),
-  createdAt: z.iso.datetime(),
-  updatedAt: z.iso.datetime(),
-});
+export const ReviewSchema = z
+  .object({
+    id: z.string(),
+    cycle: z.object({ id: z.string(), name: z.string(), status: CycleStatusSchema }),
+    employee: UserRefSchema,
+    reviewer: UserRefSchema.nullable(),
+    status: ReviewStatusSchema,
+    locked: z.boolean(),
+    scores: z.array(ScoreSchema),
+    answers: z.array(AnswerSchema),
+    averageScore: z.number().nullable(),
+    submittedAt: z.iso.datetime().nullable(),
+    createdAt: z.iso.datetime(),
+    updatedAt: z.iso.datetime(),
+  })
+  .meta({ id: 'Review' });
 export type ReviewDto = z.infer<typeof ReviewSchema>;
 
 /** The single-review view adds what the review page needs around it. */
 export const ReviewDetailSchema = ReviewSchema.extend({
   competencies: z.array(z.string()),
   feedbackCount: z.number().int(),
-});
+}).meta({ id: 'ReviewDetail' });
 export type ReviewDetailDto = z.infer<typeof ReviewDetailSchema>;
 
-export const ReviewListSchema = paginated(ReviewSchema);
+export const ReviewListSchema = paginated(ReviewSchema).meta({ id: 'ReviewPage' });
 export type ReviewList = z.infer<typeof ReviewListSchema>;
 
 export const ListReviewsQuerySchema = z.strictObject({
@@ -81,7 +87,8 @@ export const UpdateReviewBodySchema = z
   })
   .refine((body) => body.scores !== undefined || body.answers !== undefined, {
     message: 'Provide scores and/or answers',
-  });
+  })
+  .meta({ id: 'UpdateReviewRequest' });
 export type UpdateReviewBody = z.infer<typeof UpdateReviewBodySchema>;
 
 export interface PopulatedCycle {

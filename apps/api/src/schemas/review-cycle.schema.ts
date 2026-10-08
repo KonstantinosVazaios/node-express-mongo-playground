@@ -5,20 +5,22 @@ import { PaginationQuerySchema, paginated } from './common.schema.js';
 
 export const CycleStatusSchema = z.enum(CYCLE_STATUSES);
 
-export const ReviewCycleSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-  status: CycleStatusSchema,
-  competencies: z.array(z.string()),
-  questions: z.array(z.string()),
-  startsAt: z.iso.date().nullable(),
-  endsAt: z.iso.date().nullable(),
-  closedAt: z.iso.datetime().nullable(),
-  createdAt: z.iso.datetime(),
-});
+export const ReviewCycleSchema = z
+  .object({
+    id: z.string(),
+    name: z.string(),
+    status: CycleStatusSchema,
+    competencies: z.array(z.string()),
+    questions: z.array(z.string()),
+    startsAt: z.iso.date().nullable(),
+    endsAt: z.iso.date().nullable(),
+    closedAt: z.iso.datetime().nullable(),
+    createdAt: z.iso.datetime(),
+  })
+  .meta({ id: 'ReviewCycle' });
 export type ReviewCycleDto = z.infer<typeof ReviewCycleSchema>;
 
-export const ReviewCycleListSchema = paginated(ReviewCycleSchema);
+export const ReviewCycleListSchema = paginated(ReviewCycleSchema).meta({ id: 'ReviewCyclePage' });
 export type ReviewCycleList = z.infer<typeof ReviewCycleListSchema>;
 
 const uniqueStrings = (values: string[]) => new Set(values).size === values.length;
@@ -40,7 +42,8 @@ export const CreateReviewCycleBodySchema = z
   .refine((body) => !body.startsAt || !body.endsAt || body.startsAt <= body.endsAt, {
     message: 'End date must be on or after the start date',
     path: ['endsAt'],
-  });
+  })
+  .meta({ id: 'CreateReviewCycleRequest' });
 export type CreateReviewCycleBody = z.infer<typeof CreateReviewCycleBodySchema>;
 
 export const ListReviewCyclesQuerySchema = z.strictObject({
